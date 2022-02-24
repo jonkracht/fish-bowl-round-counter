@@ -18,12 +18,28 @@ def main():
     data['Name'] = data['Name'].apply(lambda Name: Name.upper())
 
 
-    data = data.sort_values(by='Name')
+    data = data.sort_values(by='Number')
+
+    newData = []
+
+    for number in data['Number'].unique():
+        matches = data[data['Number'] == number]
+
+        years = sorted(matches['Year'])
+        names = list(sorted(matches['Name'].unique()))
+        counts = len(years)
+
+        newData.append([names, number, years, counts])
+
+
+    monkey = pd.DataFrame(newData, columns=['Names', 'Number', 'Years', 'Counts']).sort_values(by='Counts', ascending=False)
+
 
 
     print(data.value_counts().head(50))
     #print(data['Player Name'].value_counts().head(20))
 
+    monkey.to_csv('processed-data.csv')
     print('hi')
 
 if __name__ == '__main__':

@@ -12,4 +12,6 @@ Count how many times a disc golfer has played a specific yearly tournament
 * Data input is not perfect:  typos in player names, player number not given
 
 ### Future work
-* Implement a fuzzy matching algorithm
+* Implement a fuzzy matching algorithm (Levenshtein distance, FuzzyWuzzy, etc.) to account for imperfect data
+    * Process entries with number first
+    * Fuzzy match remaining entries
