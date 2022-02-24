@@ -1,43 +1,49 @@
-# Import scraping modules
 import requests
 from bs4 import BeautifulSoup
-import csv
 
+def getParticipantData(url):
+    '''Return participants who competed in a specified event.'''
 
-def get_participant_numbers(url):
-    '''Return list of PDGA numbers who played event'''
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, 'html.parser')
 
-    r = requests.get(url) # pull html from website
-    soup = BeautifulSoup(r.text, 'html.parser') # format html
+    participantData = []
 
-    total_info = []
+    year = soup.find(class_="tournament-date").text.split()[-1].split('-')[-1] # tournament year
 
+    # Iterate over tables that contain player info and score
     for table in soup.find_all("table", class_="results sticky-enabled"):
-        player_info = table.find_all(class_ = ['even','odd'])
-        for player in player_info:
-            info = []
-            info.append(player.find(class_='player').text)
-            print(player.find(class_='player').text)
+        players = table.find_all(class_ = ['even','odd']) # removes table headers
 
-            # Handle no PDGA field:
+        for player in players:
+            playerInfo = []
+            playerInfo.append(player.find(class_='player').text)
+
+            # Handle players without PDGA numbers or simply not supplied:
             try:
-                info.append(player.find(class_ = 'pdga-number').text)
+                playerInfo.append(player.find(class_ = 'pdga-number').text)
             except:
-                info.append('')
-            #print('hi')
+                playerInfo.append('')
 
-            total_info.append(info)
+            playerInfo.append(year)
 
-    return total_info
+            participantData.append(playerInfo)
+
+    return participantData
 
 
-def save_data(data, filename):
-    '''Save scraped data to file for later analysis'''
+def saveData(data, filename):
+    '''Save data as csv for later analysis.'''
+
+    import csv
 
     with open(filename, 'w') as f:
         writer = csv.writer(f, delimiter=",")
 
-        writer.writerow(['Player Name','PDGA number'])
+        # Write column headers
+        writer.writerow(['Name', 'Number', 'Year'])
+
+        # Write main body of data
         writer.writerows(data)
 
     return
@@ -46,26 +52,22 @@ def save_data(data, filename):
 def main():
     '''Main function to count number of times each player has played FISH bowl'''
 
-    # PDGA index of FISH Bowl events; url is "pdga.com/tour/event/[INDEX]"
-    fish_bowl_event_ids = ['14845','16962','19576','25212','32338','35566','40638','46171','51988']
+    # Event numbers; url for the event is then "pdga.com/tour/event/[eventNumbers]"
+    eventNumbers = ['14845', '16962', '19576', '25212', '32338', '35566', '40638', '46171', '51988']
 
-    all_rounds=[]
-    for i in fish_bowl_event_ids:
+    data = []
+    for event in eventNumbers:
 
-        print(f'FISH Bowl with event ID: {i}')
+        print(f'Scraping data for event number {event}.')
 
-        url = 'http://www.pdga.com/tour/event/'+i
-        participant_numbers = get_participant_numbers(url)
+        url = 'http://www.pdga.com/tour/event/' + event
+        participants = getParticipantData(url)
 
-        #print(f'For event ID {i}, there were {len(participant_numbers)} players and their numbers were:\n{participant_numbers}')
-
-        all_rounds += participant_numbers
-
-        #print('hi')
+        data += participants
 
     # Save data
     save_file_name = 'fish-bowl-rounds-counter-data.csv'
-    save_data(all_rounds, save_file_name)
+    saveData(data, save_file_name)
 
 
 if __name__ == '__main__':

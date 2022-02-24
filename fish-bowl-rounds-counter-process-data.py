@@ -1,4 +1,3 @@
-import csv
 import pandas as pd
 
 def load_data(file_name):
@@ -8,10 +7,19 @@ def load_data(file_name):
 
 
 def main():
+    '''Clean up data scraped from PDGA.'''
+
     file_name = 'fish-bowl-rounds-counter-data.csv'
 
     # Load saved data
     data = load_data(file_name)
+
+    # Make names upper case
+    data['Name'] = data['Name'].apply(lambda Name: Name.upper())
+
+
+    data = data.sort_values(by='Name')
+
 
     print(data.value_counts().head(50))
     #print(data['Player Name'].value_counts().head(20))
